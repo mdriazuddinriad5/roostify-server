@@ -27,7 +27,17 @@ async function run() {
         // Connect the client to the server	(optional starting in v4.7)
         client.connect();
 
+        const roomCollection = client.db('hotel').collection('rooms');
 
+
+
+        // room related api
+
+        app.get('/rooms', async (req, res) => {
+            const cursor = roomCollection.find();
+            const result = await cursor.toArray();
+            res.send(result);
+        })
 
 
 
