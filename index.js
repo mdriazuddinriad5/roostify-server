@@ -18,6 +18,7 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser());
 
+
 const uri = `mongodb+srv://${process.env.USER_DB}:${process.env.USER_PASS}@cluster0.wz04jag.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -29,6 +30,29 @@ const client = new MongoClient(uri, {
     }
 });
 
+
+// custom middlewares
+
+const verifyToken = (req, res, next) => {
+    const token = req?.cookies?.token;
+    if (!token) {
+        // next()
+        return res.status(401).send({ message: 'Unauthorized' });
+    }
+
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+        if (err) {
+            return res.status(401).send({ message: 'Unauthorized me' })
+        }
+
+        req.user = decoded;
+
+        next()
+    })
+}
+
+
+
 async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
@@ -36,14 +60,15 @@ async function run() {
 
         const roomCollection = client.db('hotel').collection('rooms');
         const bookingCollection = client.db('hotel').collection('bookings');
-
+        const reviewCollection = client.db('hotel').collection('reviews');
+        
 
 
         // auth related api
         app.post('/jwt', async (req, res) => {
             const user = req.body;
             console.log(user);
-            const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' })
+            const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '24h' })
             res
                 .cookie('token', token, {
                     httpOnly: true,
@@ -95,8 +120,8 @@ async function run() {
         })
 
 
-        app.get('/bookings', async (req, res) => {
-            console.log(req.query.email);
+        app.get('/bookings',verifyToken,  async (req, res) => {
+            
             let query = {}
             if (req.query?.email) {
                 query = { email: req.query.email }
@@ -128,17 +153,23 @@ async function run() {
             res.send(result)
         });
 
-        app.get('/bookings', async (req, res) => {
-            console.log(req.query.email);
-            let query = {}
-            if (req.query?.date && req.query?.room_id) {
-                query = { date: req.query.date, room_id: req.query.room_id }
-            }
-            const result = await bookingCollection.find(query).toArray();
+       
+        // review related api
+
+
+        app.post('/reviews',async(req,res)=>{
+            const review = req.body;
+            console.log(review);
+            const result = await reviewCollection.insertOne(review);
             res.send(result);
+
         })
 
-
+        app.get('/reviews', async(req,res)=>{
+            const cursor = reviewCollection.find();
+            const result = await cursor.toArray();
+            res.send(result);
+        })
 
 
         // Send a ping to confirm a successful connection
