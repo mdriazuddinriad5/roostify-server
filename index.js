@@ -61,6 +61,7 @@ async function run() {
         const roomCollection = client.db('hotel').collection('rooms');
         const bookingCollection = client.db('hotel').collection('bookings');
         const reviewCollection = client.db('hotel').collection('reviews');
+        const testimonialCollection = client.db('hotel').collection('testimonials');
         
 
 
@@ -167,6 +168,21 @@ async function run() {
 
         app.get('/reviews', async(req,res)=>{
             const cursor = reviewCollection.find();
+            const result = await cursor.toArray();
+            res.send(result);
+        })
+
+
+        app.post('/testimonials',async(req,res)=>{
+            const testimonial = req.body;
+            console.log(testimonial);
+            const result = await testimonialCollection.insertOne(testimonial);
+            res.send(result);
+
+        })
+
+        app.get('/testimonials', async(req,res)=>{
+            const cursor = testimonialCollection.find();
             const result = await cursor.toArray();
             res.send(result);
         })
