@@ -99,6 +99,16 @@ async function run() {
             res.send(result)
         });
 
+        app.get('/bookings', async (req, res) => {
+            console.log(req.query.email);
+            let query = {}
+            if (req.query?.date && req.query?.room_id) {
+                query = { date: req.query.date, room_id: req.query.room_id }
+            }
+            const result = await bookingCollection.find(query).toArray();
+            res.send(result);
+        })
+
 
 
 
