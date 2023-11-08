@@ -28,6 +28,8 @@ async function run() {
         client.connect();
 
         const roomCollection = client.db('hotel').collection('rooms');
+        const bookingCollection = client.db('hotel').collection('bookings');
+
 
 
 
@@ -44,7 +46,7 @@ async function run() {
             const query = { _id: new ObjectId(id) }
 
             const options = {
-                projection: { _id: 1, roomDescription: 1, pricePerNight: 1, roomSize: 1, availability: 1, roomImages: 1, specialOffers: 1, date: 1, review: 1 }
+                projection: { _id: 1,roomNumber:1, roomDescription: 1, pricePerNight: 1, roomSize: 1, availability: 1, roomImages: 1, specialOffers: 1, date: 1, review: 1 }
             }
 
             const result = await roomCollection.findOne(query, options);
@@ -52,6 +54,17 @@ async function run() {
             res.send(result);
 
         })
+
+
+        // booking related api
+
+        app.post('/bookings', async (req, res) => {
+            const booking = req.body;
+            console.log(booking);
+            const result = await bookingCollection.insertOne(booking);
+            res.send(result);
+        })
+
 
 
 
