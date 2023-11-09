@@ -12,6 +12,8 @@ const cookieParser = require('cookie-parser')
 app.use(cors({
     origin: [
         'http://localhost:5173',
+        'https://roostify-hotel.web.app',
+        'https://roostify-hotel.firebaseapp.com',
     ],
     credentials: true
 }));
@@ -36,7 +38,6 @@ const client = new MongoClient(uri, {
 const verifyToken = (req, res, next) => {
     const token = req?.cookies?.token;
     if (!token) {
-        // next()
         return res.status(401).send({ message: 'Unauthorized' });
     }
 
@@ -62,7 +63,7 @@ async function run() {
         const bookingCollection = client.db('hotel').collection('bookings');
         const reviewCollection = client.db('hotel').collection('reviews');
         const testimonialCollection = client.db('hotel').collection('testimonials');
-        
+
 
 
         // auth related api
@@ -121,8 +122,25 @@ async function run() {
         })
 
 
-        app.get('/bookings',verifyToken,  async (req, res) => {
-            
+        app.get('/bookings', verifyToken, async (req, res) => {
+
+
+            if (req?.user?.email !== req?.query?.email) {
+                return res.status(403).send('Forbidden access');
+            }
+            let query = {}
+            if (req.query?.email) {
+                query = { email: req.query.email }
+            }
+            const result = await bookingCollection.find(query).toArray();
+            res.send(result);
+        })
+
+        app.get('/booking', async (req, res) => {
+
+            if (req?.user?.email !== req?.query?.email) {
+                return res.status(403).send('Forbidden access');
+            }
             let query = {}
             if (req.query?.email) {
                 query = { email: req.query.email }
@@ -154,11 +172,11 @@ async function run() {
             res.send(result)
         });
 
-       
+
         // review related api
 
 
-        app.post('/reviews',async(req,res)=>{
+        app.post('/reviews', async (req, res) => {
             const review = req.body;
             console.log(review);
             const result = await reviewCollection.insertOne(review);
@@ -166,14 +184,14 @@ async function run() {
 
         })
 
-        app.get('/reviews', async(req,res)=>{
+        app.get('/reviews', async (req, res) => {
             const cursor = reviewCollection.find();
             const result = await cursor.toArray();
             res.send(result);
         })
 
 
-        app.post('/testimonials',async(req,res)=>{
+        app.post('/testimonials', async (req, res) => {
             const testimonial = req.body;
             console.log(testimonial);
             const result = await testimonialCollection.insertOne(testimonial);
@@ -181,7 +199,7 @@ async function run() {
 
         })
 
-        app.get('/testimonials', async(req,res)=>{
+        app.get('/testimonials', async (req, res) => {
             const cursor = testimonialCollection.find();
             const result = await cursor.toArray();
             res.send(result);
