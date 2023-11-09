@@ -176,31 +176,34 @@ async function run() {
         // review related api
 
 
-        app.post('/reviews', async (req, res) => {
-            const review = req.body;
-            console.log(review);
-            const result = await reviewCollection.insertOne(review);
-            res.send(result);
+        app.post('/reviews/:roomId', async (req, res) => {
+            const roomId = req.params.roomId;
+            const { username, rating, comment } = req.body;
+            const timestamp = new Date();
 
-        })
+            const reviewData = {
+                username,
+                rating,
+                comment,
+                timestamp,
+                roomId,
+            };
 
-        app.get('/reviews', async (req, res) => {
-            const cursor = reviewCollection.find();
-            const result = await cursor.toArray();
-            res.send(result);
-        })
+            const result = await reviewCollection.insertOne(reviewData);
+            res.send(result)
+
+        });
+
+        app.get('/reviews/:roomId', async (req, res) => {
+            const roomId = req.params.roomId;
+            const reviews = await reviewCollection.find({ roomId }).toArray();
+            res.send(reviews);
+        });
 
 
-        app.post('/testimonials', async (req, res) => {
-            const testimonial = req.body;
-            console.log(testimonial);
-            const result = await testimonialCollection.insertOne(testimonial);
-            res.send(result);
-
-        })
 
         app.get('/testimonials', async (req, res) => {
-            const cursor = testimonialCollection.find();
+            const cursor = reviewCollection.find();
             const result = await cursor.toArray();
             res.send(result);
         })
